@@ -1,0 +1,158 @@
+@page "/enrollments"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Authorization
+@using SIMS.Data
+@attribute [Authorize]
+@implements IAsyncDisposable
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Enrollment Management</PageTitle>
+
+<div class="container py-5 fade-in">
+    <!-- Header Section -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">
+                <i class="bi bi-person-check-fill me-2"></i>Course Enrollments
+            </h2>
+            <p class="text-muted mb-0">Overview of student enrollments per course</p>
+        </div>
+        @if (IsAdmin)
+        {
+            <div>
+                <a href="enrollments/assign" class="btn btn-gradient-primary px-4 py-2 rounded-pill d-inline-flex align-items-center">
+                    <i class="bi bi-plus-lg me-2"></i> Assign Students
+                </a>
+            </div>
+        }
+    </div>
+
+    <!-- Data Grid Card -->
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            @if (CourseEnrollments == null)
+            {
+                <div class="d-flex flex-column align-items-center justify-content-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="text-muted">Loading enrollment data...</span>
+                </div>
+            }
+            else
+            {
+                <QuickGrid Class="table table-borderless custom-table mb-0 align-middle" Items="CourseEnrollments">
+
+                    <!-- Course Name -->
+                    <TemplateColumn Title="Course" Sortable="true" SortBy="@(GridSort<CourseEnrollmentViewModel>.ByAscending(c => c.Name))" Class="ps-4">
+                        <div class="d-flex align-items-center py-2">
+                            <div class="bg-light text-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-journal-bookmark-fill"></i>
+                            </div>
+                            <span class="fw-bold text-dark">@context.Name</span>
+                        </div>
+                    </TemplateColumn>
+
+                    <!-- Subject -->
+                    <TemplateColumn Title="Subject" Sortable="true" SortBy="@(GridSort<CourseEnrollmentViewModel>.ByAscending(c => c.Subject.Name))">
+                        <span class="badge bg-soft-info text-info border border-info border-opacity-25 rounded-pill px-3">
+                            @context.Subject.Name
+                        </span>
+                    </TemplateColumn>
+
+                    <!-- Semester -->
+                    <TemplateColumn Title="Semester" Sortable="true" SortBy="@(GridSort<CourseEnrollmentViewModel>.ByAscending(c => c.Semester.Name))">
+                        <span class="badge bg-light text-dark border rounded-pill px-3">
+                            <i class="bi bi-calendar3 me-1"></i> @context.Semester.Name
+                        </span>
+                    </TemplateColumn>
+
+                    <!-- Lecturer -->
+                    <TemplateColumn Title="Lecturer" Sortable="true" SortBy="@(GridSort<CourseEnrollmentViewModel>.ByAscending(c => c.Lecture.Name))">
+                        <div class="d-flex align-items-center text-secondary">
+                            <i class="bi bi-person-video3 me-2"></i> @context.Lecture.Name
+                        </div>
+                    </TemplateColumn>
+
+                    <!-- Students Count -->
+                    <TemplateColumn Title="Students" Sortable="true" SortBy="@(GridSort<CourseEnrollmentViewModel>.ByAscending(c => c.StudentCount))">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-soft-primary text-primary rounded-pill px-3 py-2 d-flex align-items-center">
+                                <i class="bi bi-people-fill me-2"></i> @context.StudentCount
+                            </span>
+                        </div>
+                    </TemplateColumn>
+
+                    <!-- Actions -->
+                    <TemplateColumn Title="Actions" Class="text-end pe-4">
+                        @if (IsAdmin)
+                        {
+                            <a href="@($"enrollments/assign-students?courseId={context.Id}")" class="btn btn-light btn-sm text-primary shadow-sm border" title="Manage Students">
+                                <i class="bi bi-person-plus-fill me-1"></i> Manage
+                            </a>
+                        }
+                    </TemplateColumn>
+
+                </QuickGrid>
+            }
+        </div>
+
+        <div class="card-footer bg-white border-top border-light py-3 px-4">
+            <small class="text-muted">
+                <i class="bi bi-list-check me-1"></i> Total Courses: <strong>@(CourseEnrollments?.Count() ?? 0)</strong>
+            </small>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ApplicationDbContext context = default!;
+    private IQueryable<CourseEnrollmentViewModel> CourseEnrollments = default!;
+    private bool IsAdmin = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        context = DbFactory.CreateDbContext();
+
+        // Check if user is in Admin role
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        IsAdmin = authState.User.IsInRole("Admin");
+
+        var courses = await context.Courses
+            .Include(c => c.Subject)
+            .Include(c => c.Semester)
+            .Include(c => c.Lecture)
+            .ToListAsync();
+
+        var enrollmentCounts = await context.Enrollments
+            .GroupBy(e => e.CourseId)
+            .Select(g => new { CourseId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CourseId, x => x.Count);
+
+        var courseList = courses.Select(c => new CourseEnrollmentViewModel
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Subject = c.Subject,
+            Semester = c.Semester,
+            Lecture = c.Lecture,
+            StudentCount = enrollmentCounts.ContainsKey(c.Id) ? enrollmentCounts[c.Id] : 0
+        }).ToList();
+
+        CourseEnrollments = courseList.AsQueryable();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+
+    public class CourseEnrollmentViewModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public Subject Subject { get; set; } = null!;
+        public Semester Semester { get; set; } = null!;
+        public ApplicationUser Lecture { get; set; } = null!;
+        public int StudentCount { get; set; }
+    }
+}

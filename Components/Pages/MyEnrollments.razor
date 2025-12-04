@@ -1,0 +1,232 @@
+@page "/my-enrollments"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using SIMS.Data
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Student")]
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>My Enrollments</PageTitle>
+
+<div class="container py-5 fade-in">
+    <!-- Header Section -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">
+                <i class="bi bi-journal-bookmark-fill me-2"></i>My Enrollments
+            </h2>
+            <p class="text-muted mb-0">Track your academic progress and enrolled courses.</p>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill shadow-sm">
+                <i class="bi bi-calendar-check me-2"></i>Active Semester
+            </span>
+        </div>
+    </div>
+
+    @if (IsLoading)
+    {
+        <!-- Skeleton Loading State -->
+        <div class="row g-4">
+            @for (int i = 0; i < 3; i++)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between mb-4">
+                                <div class="skeleton rounded-3" style="width: 50px; height: 50px;"></div>
+                                <div class="skeleton rounded-pill" style="width: 80px; height: 24px;"></div>
+                            </div>
+                            <div class="skeleton mb-2 rounded" style="width: 70%; height: 20px;"></div>
+                            <div class="skeleton mb-4 rounded" style="width: 40%; height: 16px;"></div>
+                            <div class="skeleton rounded-pill mt-auto" style="width: 100%; height: 40px;"></div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else if (!Enrollments.Any())
+    {
+        <!-- Empty State -->
+        <div class="card border-0 shadow-sm rounded-4 bg-light py-5 text-center">
+            <div class="card-body">
+                <div class="mb-3">
+                    <i class="bi bi-journal-x text-muted opacity-25" style="font-size: 4rem;"></i>
+                </div>
+                <h5 class="fw-bold text-secondary">No Enrollments Found</h5>
+                <p class="text-muted mb-3">You haven't enrolled in any courses for this semester yet.</p>
+                <a href="/" class="btn btn-primary rounded-pill px-4 shadow-sm">Browse Courses</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Stats Overview -->
+        <div class="row g-3 mb-5">
+            <div class="col-md-12">
+                <div class="card border-0 bg-gradient-info text-white shadow-lg rounded-4 p-3 position-relative overflow-hidden">
+                    <div class="card-body position-relative z-1 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="small text-white-50 fw-bold text-uppercase mb-1">Total Courses</div>
+                            <h2 class="mb-0 fw-bold display-6">@Enrollments.Count</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-backpack4-fill fs-3 text-white"></i>
+                        </div>
+                    </div>
+                    <i class="bi bi-journal-album position-absolute top-50 start-0 translate-middle text-white opacity-10" style="font-size: 8rem;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Grid -->
+        <div class="row g-4">
+            @foreach (var enrollment in Enrollments)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift transition course-card">
+                        <!-- Card Header Decoration -->
+                        <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                            <i class="bi bi-journal-text text-primary" style="font-size: 5rem; margin-right: -1rem; margin-top: -1rem;"></i>
+                        </div>
+
+                        <div class="card-body p-4 d-flex flex-column">
+                            <!-- Top Info: Icon & Semester -->
+                            <div class="d-flex justify-content-between align-items-start mb-3 position-relative z-1">
+                                <div class="bg-gradient-primary text-white rounded-3 shadow-sm d-flex align-items-center justify-content-center p-3" style="width: 56px; height: 56px;">
+                                    <span class="fw-bold fs-5">
+                                        @(enrollment.Course.Subject?.Code?.Substring(0, Math.Min(2, enrollment.Course.Subject?.Code?.Length ?? 0)) ?? "SUB")
+                                    </span>
+                                </div>
+                                <span class="badge bg-light text-secondary border rounded-pill px-3 py-2">
+                                    @enrollment.Course.Semester?.Name
+                                </span>
+                            </div>
+
+                            <!-- Course Title -->
+                            <h5 class="fw-bold text-dark mb-2 text-truncate-2" title="@enrollment.Course.Name">
+                                @enrollment.Course.Name
+                            </h5>
+
+                            <div class="text-muted small mb-4">
+                                <i class="bi bi-upc-scan me-1 text-primary"></i> @enrollment.Course.Subject?.Name
+                            </div>
+
+                            <!-- Bottom Info: Lecturer & Status -->
+                            <div class="mt-auto pt-3 border-top border-light">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-light rounded-circle p-1 me-2 text-secondary">
+                                        <i class="bi bi-person-video3"></i>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted d-block" style="font-size: 0.75rem;">Lecturer</small>
+                                        <span class="fw-medium text-dark small">@(enrollment.Course.Lecture?.Name ?? "TBA")</span>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-soft-success text-success border border-success border-opacity-10 rounded-pill px-3 py-2">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Enrolled
+                                    </span>
+                                    <button class="btn btn-sm btn-light rounded-circle" title="View Details">
+                                        <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    /* Gradient Backgrounds */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    }
+
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+    }
+
+    /* Soft Colors */
+    .bg-soft-success {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    /* Hover Effects */
+    .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 3rem rgba(0,0,0,.15) !important;
+        }
+
+    .opacity-10 {
+        opacity: 0.1;
+    }
+
+    .opacity-25 {
+        opacity: 0.25;
+    }
+
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Skeleton Animation */
+    .skeleton {
+        background: #e0e0e0;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+</style>
+
+@code {
+    private List<Enrollment> Enrollments { get; set; } = new();
+    private bool IsLoading { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate delay for skeleton demo (optional)
+        // await Task.Delay(500);
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var currentUser = await UserManager.GetUserAsync(user);
+            if (currentUser != null)
+            {
+                using var context = DbFactory.CreateDbContext();
+                Enrollments = await context.Enrollments
+                    .Include(e => e.Course)
+                        .ThenInclude(c => c.Subject)
+                    .Include(e => e.Course)
+                        .ThenInclude(c => c.Semester)
+                    .Include(e => e.Course)
+                        .ThenInclude(c => c.Lecture)
+                    .Where(e => e.StudentId == currentUser.Id)
+                    .OrderBy(e => e.Course.Semester.Name)
+                    .ThenBy(e => e.Course.Name)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+        }
+
+        IsLoading = false;
+    }
+}

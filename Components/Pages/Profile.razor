@@ -1,0 +1,319 @@
+﻿@page "/profile"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using SIMS.Data
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Hosting
+@using System.IO
+
+@attribute [Authorize]
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject IWebHostEnvironment Environment
+
+<PageTitle>My Profile</PageTitle>
+
+<div class="container py-5 fade-in">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h2 class="fw-bold text-primary mb-1">
+                        <i class="bi bi-person-circle me-2"></i>My Profile
+                    </h2>
+                    <p class="text-muted mb-0">Manage your personal information and account settings.</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="bg-gradient-primary h-2"></div>
+                <div class="card-body p-4 p-md-5">
+
+                    @if (IsSuccess)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i> Your profile has been updated successfully.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @onclick="() => IsSuccess = false"></button>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @ErrorMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @onclick="() => ErrorMessage = null"></button>
+                        </div>
+                    }
+
+                    <EditForm Model="Input" OnValidSubmit="UpdateProfileAsync" FormName="update-profile" method="post" enctype="multipart/form-data">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger mb-3" role="alert" />
+
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-4 mb-md-0 border-end-md">
+                                <div class="position-relative d-inline-block mb-3">
+                                    @if (!string.IsNullOrEmpty(Input.AvatarPath))
+                                    {
+                                        <img src="@Input.AvatarPath" alt="Avatar" class="rounded-circle img-thumbnail shadow-sm"
+                                             style="width: 160px; height: 160px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle img-thumbnail shadow-sm bg-light d-flex align-items-center justify-content-center text-secondary"
+                                             style="width: 160px; height: 160px; font-size: 4rem;">
+                                            <i class="bi bi-person-fill"></i>
+                                        </div>
+                                    }
+
+                                    <label for="avatarUpload" class="position-absolute bottom-0 end-0 btn btn-sm btn-primary rounded-circle shadow-sm" style="cursor: pointer;" title="Change Avatar">
+                                        <i class="bi bi-camera-fill"></i>
+                                    </label>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted fw-bold">Upload New Photo</label>
+                                    <input id="avatarUpload" type="file" name="Input.AvatarFile" class="form-control form-control-sm" accept=".png,.jpg,.jpeg" />
+                                </div>
+
+                                <div class="mt-4">
+                                    <div class="text-muted small text-uppercase fw-bold mb-2">Account Role</div>
+                                    <span class="badge bg-soft-primary text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
+                                        @UserRole
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-8 ps-md-4">
+                                <h5 class="fw-bold text-secondary mb-4">Personal Details</h5>
+
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold text-secondary small">Email / Username</label>
+                                        <input type="text" class="form-control bg-light" value="@username" disabled />
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold text-secondary small">Full Name</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white text-muted"><i class="bi bi-person"></i></span>
+                                            <InputText @bind-Value="Input.Name" class="form-control" placeholder="Your full name" />
+                                        </div>
+                                        <ValidationMessage For="() => Input.Name" class="text-danger small" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-secondary small">Student/Staff ID</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white text-muted"><i class="bi bi-card-heading"></i></span>
+                                            <InputText @bind-Value="Input.StudentId" class="form-control font-monospace" placeholder="ID number" />
+                                        </div>
+                                        <ValidationMessage For="() => Input.StudentId" class="text-danger small" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-secondary small">Date of Birth</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white text-muted"><i class="bi bi-calendar3"></i></span>
+                                            <InputDate @bind-Value="Input.DOB" class="form-control" />
+                                        </div>
+                                        <ValidationMessage For="() => Input.DOB" class="text-danger small" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-secondary small">Phone Number</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white text-muted"><i class="bi bi-telephone"></i></span>
+                                            <InputText @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Phone number" />
+                                        </div>
+                                        <ValidationMessage For="() => Input.PhoneNumber" class="text-danger small" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-secondary small">Address</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white text-muted"><i class="bi bi-geo-alt"></i></span>
+                                            <InputText @bind-Value="Input.Address" class="form-control" placeholder="City, Country" />
+                                        </div>
+                                        <ValidationMessage For="() => Input.Address" class="text-danger small" />
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2 mt-5">
+                                    <a href="/" class="btn btn-light rounded-pill px-4">Cancel</a>
+                                    <button type="submit" class="btn btn-gradient-primary rounded-pill px-4 shadow-sm">
+                                        <i class="bi bi-save me-2"></i>Save Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(45deg, #4e73df, #224abe);
+        color: white;
+        border: none;
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .h-2 {
+        height: 8px;
+    }
+
+    .border-end-md {
+        border-right: 1px solid #dee2e6;
+    }
+
+    @@media (max-width: 767.98px) {
+        .border-end-md {
+            border-right: none;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 1.5rem;
+        }
+    }
+</style>
+
+@code {
+    private ApplicationUser user = default!;
+    private string? username;
+    private string UserRole = "";
+    private bool IsSuccess = false;
+    private string? ErrorMessage;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.User;
+
+        if (principal.Identity?.IsAuthenticated == true)
+        {
+            user = await UserManager.GetUserAsync(principal) ?? throw new Exception("User not found");
+            username = user.UserName;
+
+            // Lấy role để hiển thị
+            var roles = await UserManager.GetRolesAsync(user);
+            UserRole = roles.FirstOrDefault() ?? "User";
+
+            // Chỉ load dữ liệu nếu form chưa có dữ liệu (GET request)
+            if (string.IsNullOrEmpty(Input.Name))
+            {
+                Input.Name = user.Name;
+                Input.PhoneNumber = user.PhoneNumber;
+                Input.Address = user.Address;
+                Input.DOB = user.DOB;
+                Input.StudentId = user.StudentId;
+                Input.AvatarPath = user.Avatar;
+            }
+        }
+        else
+        {
+            NavigationManager.NavigateTo("Account/Login");
+        }
+    }
+
+    private async Task UpdateProfileAsync()
+    {
+        IsSuccess = false;
+        ErrorMessage = null;
+        bool hasChanges = false;
+
+        // 1. Xử lý Upload Avatar
+        if (Input.AvatarFile is not null)
+        {
+            try
+            {
+                var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads", "avatars");
+                Directory.CreateDirectory(uploadsFolder); // Đảm bảo thư mục tồn tại
+
+                var extension = Path.GetExtension(Input.AvatarFile.FileName);
+                var fileName = $"{user.Id}_{DateTime.Now.Ticks}{extension}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await Input.AvatarFile.CopyToAsync(stream);
+                }
+
+                user.Avatar = $"/uploads/avatars/{fileName}";
+                hasChanges = true;
+                // Cập nhật lại đường dẫn hiển thị ngay lập tức
+                Input.AvatarPath = user.Avatar;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error uploading avatar: {ex.Message}";
+                return;
+            }
+        }
+
+        // 2. Cập nhật các thông tin khác
+        if (Input.Name != user.Name) { user.Name = Input.Name ?? ""; hasChanges = true; }
+        if (Input.Address != user.Address) { user.Address = Input.Address; hasChanges = true; }
+        if (Input.DOB != user.DOB) { user.DOB = Input.DOB; hasChanges = true; }
+        if (Input.StudentId != user.StudentId) { user.StudentId = Input.StudentId; hasChanges = true; }
+        if (Input.PhoneNumber != user.PhoneNumber)
+        {
+            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
+            if (!setPhoneResult.Succeeded)
+            {
+                ErrorMessage = "Error updating phone number.";
+                return;
+            }
+        }
+
+        // 3. Lưu xuống database nếu có thay đổi ở các trường custom
+        if (hasChanges)
+        {
+            var updateResult = await UserManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                ErrorMessage = "Error updating profile information.";
+                return;
+            }
+        }
+
+        // 4. Refresh sign-in để cập nhật claims (tên, avatar nếu có trong claim)
+        await SignInManager.RefreshSignInAsync(user);
+        IsSuccess = true;
+    }
+
+    public class InputModel
+    {
+        [Required(ErrorMessage = "Full Name is required")]
+        [Display(Name = "Full Name")]
+        public string? Name { get; set; }
+
+        [Phone]
+        [Display(Name = "Phone Number")]
+        public string? PhoneNumber { get; set; }
+
+        [Display(Name = "Address")]
+        public string? Address { get; set; }
+
+        [Display(Name = "Date of Birth")]
+        public DateTime? DOB { get; set; }
+
+        [Display(Name = "Student/Staff ID")]
+        public string? StudentId { get; set; }
+
+        public string? AvatarPath { get; set; }
+
+        [Display(Name = "Avatar")]
+        public IFormFile? AvatarFile { get; set; }
+    }
+}

@@ -1,0 +1,227 @@
+@page "/users"
+@using System.Linq
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Identity
+@using SIMS.Data
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>User Management</PageTitle>
+
+<div class="container py-5 fade-in">
+<<<<<<< HEAD
+=======
+    <!-- Header Section -->
+>>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">
+                <i class="bi bi-people-fill me-2"></i>User List
+            </h2>
+            <p class="text-muted mb-0">Manage system users, students, and staff accounts.</p>
+        </div>
+        <div>
+            <a href="users/create" class="btn btn-gradient-primary px-4 py-2 rounded-pill d-inline-flex align-items-center">
+                <i class="bi bi-person-plus-fill me-2"></i> Create New User
+            </a>
+        </div>
+    </div>
+
+<<<<<<< HEAD
+=======
+    <!-- Data Grid Card -->
+>>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+
+            @* Using QuickGrid with custom template columns for richer UI *@
+            <QuickGrid Class="table table-borderless custom-table mb-0 align-middle" Items="Users.AsQueryable()">
+
+<<<<<<< HEAD
+                <TemplateColumn Title="User Profile" Sortable="true" SortBy="@sortByName" Class="ps-4">
+                    <div class="d-flex align-items-center py-2">
+
+                        @if (!string.IsNullOrEmpty(context.Avatar))
+                        {
+                            <img src="@context.Avatar" alt="@context.Name" class="rounded-circle shadow-sm me-3"
+                                 style="width: 45px; height: 45px; object-fit: cover; flex-shrink: 0;" />
+                        }
+                        else
+                        {
+                            <div class="bg-gradient-secondary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm me-3"
+                                 style="width: 45px; height: 45px; font-size: 1.2rem; flex-shrink: 0;">
+                                @(string.IsNullOrEmpty(context.Name) ? "?" : context.Name.Substring(0, 1).ToUpper())
+                            </div>
+                        }
+=======
+                <!-- User Profile Column (Avatar + Name + Email) -->
+                <TemplateColumn Title="User Profile" Sortable="true" SortBy="@sortByName" Class="ps-4">
+                    <div class="d-flex align-items-center py-2">
+                        <div class="bg-gradient-secondary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm me-3"
+                             style="width: 45px; height: 45px; font-size: 1.2rem; flex-shrink: 0;">
+                            @(string.IsNullOrEmpty(context.Name) ? "?" : context.Name.Substring(0, 1).ToUpper())
+                        </div>
+
+>>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
+                        <div class="d-flex flex-column">
+                            <span class="fw-bold text-dark fs-6">@(string.IsNullOrEmpty(context.Name) ? "No Name" : context.Name)</span>
+                            <span class="text-muted small">
+                                <i class="bi bi-envelope me-1"></i>@context.Email
+                            </span>
+                        </div>
+                    </div>
+                </TemplateColumn>
+
+<<<<<<< HEAD
+=======
+                <!-- Student ID Column -->
+>>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
+                <TemplateColumn Title="Student ID" Sortable="true" SortBy="@sortByStudentId">
+                    <div class="d-flex align-items-center">
+                        @if (!string.IsNullOrEmpty(context.StudentId))
+                        {
+                            <span class="badge bg-light text-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 font-monospace">
+                                <i class="bi bi-card-heading me-1 text-secondary"></i>@context.StudentId
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted small fst-italic">N/A</span>
+                        }
+                    </div>
+                </TemplateColumn>
+
+<<<<<<< HEAD
+=======
+                <!-- Roles Column -->
+>>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
+                <TemplateColumn Title="Roles" Sortable="true" SortBy="@sortByRole">
+                    @if (!string.IsNullOrEmpty(context.Roles))
+                    {
+                        <span class="badge bg-soft-info text-info border border-info border-opacity-25 rounded-pill px-3 py-1">
+                            @context.Roles
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted small">-</span>
+                    }
+                </TemplateColumn>
+
+<<<<<<< HEAD
+=======
+                <!-- Actions Column -->
+>>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
+                <TemplateColumn Title="Actions" Class="text-end pe-4">
+                    <div class="btn-group shadow-sm rounded-3" role="group">
+                        <a href="@($"users/edit?id={context.Id}")" class="btn btn-light btn-sm text-primary" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <a href="@($"users/details?id={context.Id}")" class="btn btn-light btn-sm text-info" title="Details">
+                            <i class="bi bi-info-circle"></i>
+                        </a>
+                        <a href="@($"users/delete?id={context.Id}")" class="btn btn-light btn-sm text-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </TemplateColumn>
+
+            </QuickGrid>
+        </div>
+
+<<<<<<< HEAD
+=======
+        <!-- Footer -->
+>>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
+        <div class="card-footer bg-white border-top border-light py-3 px-4">
+            <small class="text-muted">
+                <i class="bi bi-database-check me-1"></i> System Accounts: <strong>@Users.Count</strong>
+            </small>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Button Gradient */
+    .btn-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        border: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .btn-gradient-primary:hover {
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    /* Avatar Gradient */
+    .bg-gradient-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+
+    /* Soft Info Badge */
+    .bg-soft-info {
+        background-color: rgba(13, 202, 240, 0.1) !important;
+    }
+
+    .text-info {
+        color: #0dcaf0 !important;
+    }
+
+    /* Table Hover */
+    .custom-table tr:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+
+    .font-monospace {
+        font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+</style>
+
+@code {
+    private List<UserRow> Users { get; set; } = new();
+
+    // Define Sort definitions for QuickGrid
+    GridSort<UserRow> sortByName = GridSort<UserRow>.ByAscending(u => u.Name);
+    GridSort<UserRow> sortByStudentId = GridSort<UserRow>.ByAscending(u => u.StudentId);
+    GridSort<UserRow> sortByRole = GridSort<UserRow>.ByAscending(u => u.Roles);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allUsers = await UserManager.Users.ToListAsync();
+        Users = new List<UserRow>(allUsers.Count);
+
+        foreach (var u in allUsers)
+        {
+            var roles = await UserManager.GetRolesAsync(u);
+            Users.Add(new UserRow
+            {
+                Id = u.Id,
+                Email = u.Email ?? "",
+                Name = u.Name,
+<<<<<<< HEAD
+                Avatar = u.Avatar, // Bổ sung dòng này để lấy đường dẫn ảnh
+=======
+>>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
+                StudentId = u.StudentId ?? "",
+                Roles = string.Join(", ", roles)
+            });
+        }
+    }
+
+    private sealed class UserRow
+    {
+        public string Id { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Name { get; set; } = "";
+<<<<<<< HEAD
+        public string? Avatar { get; set; } // Bổ sung thuộc tính này
+=======
+>>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
+        public string StudentId { get; set; } = "";
+        public string Roles { get; set; } = "";
+    }
+}

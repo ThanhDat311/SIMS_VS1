@@ -1,0 +1,138 @@
+﻿@page "/semesters/details"
+@using Microsoft.EntityFrameworkCore
+@using SIMS.Data
+@inject IDbContextFactory<SIMS.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Semester Details</PageTitle>
+
+<div class="container py-5 fade-in">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold text-primary mb-0">
+                        <i class="bi bi-calendar-week-fill me-2"></i>Semester Details
+                    </h2>
+                    <p class="text-muted mb-0">View academic term information.</p>
+                </div>
+                <a href="/semesters" class="btn btn-outline-secondary rounded-pill px-3">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+            </div>
+
+            <!-- Loading State -->
+            @if (semester is null)
+            {
+                <div class="d-flex flex-column align-items-center justify-content-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="text-muted">Loading semester details...</span>
+                </div>
+            }
+            else
+            {
+                <!-- Details Card -->
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                    <!-- Decorative Strip -->
+                    <div class="bg-gradient-primary h-2"></div>
+
+                    <div class="card-body p-4 p-md-5 text-center position-relative">
+
+                        <!-- Background Decorative Icon -->
+                        <div class="position-absolute top-0 start-0 w-100 h-100 overflow-hidden" style="z-index: 0; pointer-events: none;">
+                            <i class="bi bi-calendar3 text-primary opacity-05 position-absolute" style="font-size: 15rem; top: -20%; right: -10%;"></i>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div class="position-relative" style="z-index: 1;">
+
+                            <!-- Icon Avatar -->
+                            <div class="mb-4">
+                                <div class="d-inline-flex align-items-center justify-content-center bg-soft-primary text-primary rounded-circle p-4 shadow-sm" style="width: 100px; height: 100px;">
+                                    <i class="bi bi-calendar-event-fill display-4"></i>
+                                </div>
+                            </div>
+
+                            <!-- Info -->
+                            <div class="mb-5">
+                                <label class="small text-muted fw-bold text-uppercase letter-spacing-1 mb-2">Semester Name</label>
+                                <h3 class="fw-bold text-dark display-6">@semester.Name</h3>
+                                <div class="mt-2">
+                                    <span class="badge bg-light text-secondary border rounded-pill px-3 py-2">
+                                        ID: @semester.Id
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="@($"/semesters/edit?id={semester.Id}")" class="btn btn-gradient-primary btn-lg px-5 rounded-pill shadow-sm">
+                                    <i class="bi bi-pencil-square me-2"></i>Edit
+                                </a>
+                                <a href="/semesters" class="btn btn-light btn-lg px-4 rounded-pill">
+                                    Back to List
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Button Gradient */
+    .btn-gradient-primary {
+        background: linear-gradient(45deg, #4e73df, #224abe);
+        border: none;
+        color: white;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .btn-gradient-primary:hover {
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 5px 15px rgba(78, 115, 223, 0.4);
+        }
+
+    /* Decorative Elements */
+    .h-2 {
+        height: 8px;
+    }
+
+    .opacity-05 {
+        opacity: 0.05;
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .letter-spacing-1 {
+        letter-spacing: 1px;
+    }
+</style>
+
+@code {
+    private Semester? semester;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        semester = await context.Semesters.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (semester is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}
