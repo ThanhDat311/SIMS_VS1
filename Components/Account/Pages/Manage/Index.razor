@@ -87,7 +87,7 @@
             </div>
 
             <button type="submit" class="w-100 btn btn-lg btn-primary">Save Changes</button>
-=======
+
         <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
@@ -101,7 +101,6 @@
                 <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
             </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
->>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
         </EditForm>
     </div>
 </div>
@@ -123,7 +122,7 @@
         username = await UserManager.GetUserNameAsync(user);
         phoneNumber = await UserManager.GetPhoneNumberAsync(user);
 
-<<<<<<< HEAD
+
         // Chỉ load dữ liệu nếu Input chưa có dữ liệu (tránh ghi đè khi postback lỗi)
         if (string.IsNullOrEmpty(Input.Name))
         {
@@ -134,14 +133,14 @@
             Input.StudentId ??= user.StudentId;
             Input.AvatarPath ??= user.Avatar;
         }
-=======
+
         Input.PhoneNumber ??= phoneNumber;
->>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
+
     }
 
     private async Task OnValidSubmitAsync()
     {
-<<<<<<< HEAD
+
         bool hasChanges = false;
 
         // 1. Xử lý Upload Avatar
@@ -176,15 +175,13 @@
         }
 
         // 2. Cập nhật số điện thoại
-=======
->>>>>>> 905b7876f8d54c8c20d55743afa6dfef9409888c
         if (Input.PhoneNumber != phoneNumber)
         {
             var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
             if (!setPhoneResult.Succeeded)
             {
                 RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
-<<<<<<< HEAD
+
                 return;
             }
         }
